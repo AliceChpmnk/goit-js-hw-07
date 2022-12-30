@@ -1,19 +1,14 @@
 import { galleryItems } from './gallery-items.js';
 // Change code below this line
-
-const createGalleryItems = (items) => {
-    const itemsList = [];
-    items.forEach(element => {
-        itemsList.push(`
-        <div class="gallery__item">
-            <a class="gallery__link" href="${element.original}">
-                <img class="gallery__image" src="${element.preview}" data-source="${element.original}" alt="${element.description}"/>
-            </a>
-        </div>`)
-    });
-    
-    return itemsList.join('');
-}
+const createGalleryItem = ({ preview, original, description } = {}) => {
+    return `
+    <div class="gallery__item">
+        <a class="gallery__link" href="${original}">
+            <img class="gallery__image" src="${preview}" data-source="${original}" alt="${description}"/>
+        </a>
+    </div>
+  `;
+};
 
 const onGalleryCardClick = event => {
     const { target } = event;
@@ -23,24 +18,32 @@ const onGalleryCardClick = event => {
         return;
     }
 
-    const targetImgUrl = target.dataset.source;
-    const modal = basicLightbox.create(`
-	<img src="${targetImgUrl}"></img>
-`)
-    modal.show();
+    modal.element().querySelector('img').src = target.dataset.source;
 
-    // додаткове завдання
-    const closeModal = event => {
-        if (event.code === "Escape") {
-            modal.close();
-            document.removeEventListener("keydown", closeModal);
-        }
-    };
-        
-    document.addEventListener("keydown", closeModal);
+    modal.show();
 }
 
-const gallery = document.querySelector(".gallery");
-gallery.insertAdjacentHTML('beforeend', createGalleryItems(galleryItems));
+const closeModal = event => {
+        if (event.code === "Escape") {
+            modal.close();
+            return;
+        }
+    };
 
+const modal = basicLightbox.create(`
+	<img src=""></img>
+`, {
+        onShow: modal => {
+        document.addEventListener("keydown", closeModal);
+        },
+    
+        onClose: modal => {
+            document.removeEventListener("keydown", closeModal);
+        },
+    });
+
+const gallery = document.querySelector(".gallery");
+const galleryItemsList = galleryItems.map(el => createGalleryItem(el)).join('');
+
+gallery.insertAdjacentHTML('beforeend', galleryItemsList);
 gallery.addEventListener("click", onGalleryCardClick);
